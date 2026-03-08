@@ -1,13 +1,18 @@
 import { createArticleAction } from '@/lib/actions';
 import { prisma } from '@/lib/prisma';
+import { withDbFallback } from '@/lib/db-safe';
 
 export const dynamic = 'force-dynamic';
 export default async function AdminArticlesPage() {
-  const [articles, categories, admins] = await Promise.all([
-    prisma.article.findMany({ include: { category: true }, orderBy: { createdAt: 'desc' } }),
-    prisma.category.findMany(),
-    prisma.user.findMany({ where: { role: 'ADMIN' } })
-  ]);
+  const [articles, categories, admins] = await withDbFallback(
+    () =>
+      Promise.all([
+        prisma.article.findMany({ include: { category: true }, orderBy: { createdAt: 'desc' } }),
+        prisma.category.findMany(),
+        prisma.user.findMany({ where: { role: 'ADMIN' } })
+      ]),
+    [[], [], []]
+  );
 
   return (
     <div className="space-y-6">

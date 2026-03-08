@@ -1,9 +1,10 @@
 import { createCategoryAction } from '@/lib/actions';
 import { prisma } from '@/lib/prisma';
+import { withDbFallback } from '@/lib/db-safe';
 
 export const dynamic = 'force-dynamic';
 export default async function AdminCategoriesPage() {
-  const categories = await prisma.category.findMany({ orderBy: { createdAt: 'desc' } });
+  const categories = await withDbFallback(() => prisma.category.findMany({ orderBy: { createdAt: 'desc' } }), []);
 
   return (
     <div className="space-y-6">

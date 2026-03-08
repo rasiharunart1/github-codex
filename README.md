@@ -72,5 +72,7 @@ All production source files are committed in this repository and ready for Verce
 1. Push to GitHub.
 2. Import project in Vercel.
 3. Configure environment variables.
-4. Set Postgres DB (Neon/Supabase/RDS), run Prisma migration.
+4. Set Postgres DB (Neon/Supabase/RDS), run Prisma migration (`npx prisma migrate deploy`).
 5. Deploy.
+
+If the database has not been migrated yet, public/admin pages will now fall back to empty states instead of throwing a 500, but you should still apply migrations immediately for full functionality.

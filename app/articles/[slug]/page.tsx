@@ -6,10 +6,11 @@ import 'highlight.js/styles/github-dark.css';
 import { prisma } from '@/lib/prisma';
 import { incrementArticleViews } from '@/lib/actions';
 import { ArticleCard } from '@/components/article-card';
+import { withDbFallback } from '@/lib/db-safe';
 
 export const dynamic = 'force-dynamic';
 export async function generateMetadata({ params }: { params: { slug: string } }) {
-  const article = await prisma.article.findUnique({ where: { slug: params.slug } });
+  const article = await withDbFallback(() => prisma.article.findUnique({ where: { slug: params.slug } }), null);
   if (!article) return {};
   return {
     title: article.title,
@@ -18,24 +19,32 @@ export async function generateMetadata({ params }: { params: { slug: string } })
 }
 
 export default async function ArticleDetailPage({ params }: { params: { slug: string } }) {
-  const article = await prisma.article.findUnique({
-    where: { slug: params.slug },
-    include: { category: true, articleTags: { include: { tag: true } } }
-  });
+  const article = await withDbFallback(
+    () =>
+      prisma.article.findUnique({
+        where: { slug: params.slug },
+        include: { category: true, articleTags: { include: { tag: true } } }
+      }),
+    null
+  );
 
   if (!article || !article.published) notFound();
 
-  await incrementArticleViews(article.slug);
+  await withDbFallback(() => incrementArticleViews(article.slug), undefined);
 
-  const related = await prisma.article.findMany({
-    where: {
-      published: true,
-      id: { not: article.id },
-      categoryId: article.categoryId
-    },
-    include: { category: true },
-    take: 3
-  });
+  const related = await withDbFallback(
+    () =>
+      prisma.article.findMany({
+        where: {
+          published: true,
+          id: { not: article.id },
+          categoryId: article.categoryId
+        },
+        include: { category: true },
+        take: 3
+      }),
+    []
+  );
 
   return (
     <div className="space-y-8">

@@ -1,9 +1,10 @@
 import { createTagAction } from '@/lib/actions';
 import { prisma } from '@/lib/prisma';
+import { withDbFallback } from '@/lib/db-safe';
 
 export const dynamic = 'force-dynamic';
 export default async function AdminTagsPage() {
-  const tags = await prisma.tag.findMany({ orderBy: { createdAt: 'desc' } });
+  const tags = await withDbFallback(() => prisma.tag.findMany({ orderBy: { createdAt: 'desc' } }), []);
 
   return (
     <div className="space-y-6">

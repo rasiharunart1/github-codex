@@ -1,14 +1,19 @@
 import Link from 'next/link';
 import { prisma } from '@/lib/prisma';
 import { ArticleCard } from '@/components/article-card';
+import { withDbFallback } from '@/lib/db-safe';
 
 export const dynamic = 'force-dynamic';
 export default async function HomePage() {
-  const [featured, categories, latest] = await Promise.all([
-    prisma.article.findMany({ where: { published: true, featured: true }, take: 3, include: { category: true }, orderBy: { createdAt: 'desc' } }),
-    prisma.category.findMany({ take: 8, orderBy: { createdAt: 'desc' } }),
-    prisma.article.findMany({ where: { published: true }, take: 6, include: { category: true }, orderBy: { createdAt: 'desc' } })
-  ]);
+  const [featured, categories, latest] = await withDbFallback(
+    () =>
+      Promise.all([
+        prisma.article.findMany({ where: { published: true, featured: true }, take: 3, include: { category: true }, orderBy: { createdAt: 'desc' } }),
+        prisma.category.findMany({ take: 8, orderBy: { createdAt: 'desc' } }),
+        prisma.article.findMany({ where: { published: true }, take: 6, include: { category: true }, orderBy: { createdAt: 'desc' } })
+      ]),
+    [[], [], []]
+  );
 
   return (
     <div className="space-y-16">

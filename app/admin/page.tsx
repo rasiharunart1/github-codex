@@ -1,13 +1,18 @@
 import { prisma } from '@/lib/prisma';
+import { withDbFallback } from '@/lib/db-safe';
 
 export const dynamic = 'force-dynamic';
 export default async function AdminDashboardPage() {
-  const [articles, categories, tags, views] = await Promise.all([
-    prisma.article.count(),
-    prisma.category.count(),
-    prisma.tag.count(),
-    prisma.article.aggregate({ _sum: { views: true } })
-  ]);
+  const [articles, categories, tags, views] = await withDbFallback(
+    () =>
+      Promise.all([
+        prisma.article.count(),
+        prisma.category.count(),
+        prisma.tag.count(),
+        prisma.article.aggregate({ _sum: { views: true } })
+      ]),
+    [0, 0, 0, { _sum: { views: 0 } }]
+  );
 
   const cards = [
     { label: 'Articles', value: articles },
