@@ -52,6 +52,8 @@ Defined in `prisma/schema.prisma` with models:
    npm run dev
    ```
 
+> Note: `npm run build` runs `prisma generate` before `next build` so Vercel has an up-to-date Prisma Client during cached installs.
+
 ## 4) Environment variables
 
 See `.env.example`:
