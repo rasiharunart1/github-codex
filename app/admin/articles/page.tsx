@@ -1,12 +1,23 @@
 import { createArticleAction } from '@/lib/actions';
 import { prisma } from '@/lib/prisma';
+import type { Prisma } from '@prisma/client';
+
+export const dynamic = 'force-dynamic';
 
 export default async function AdminArticlesPage() {
-  const [articles, categories, admins] = await Promise.all([
-    prisma.article.findMany({ include: { category: true }, orderBy: { createdAt: 'desc' } }),
-    prisma.category.findMany(),
-    prisma.user.findMany({ where: { role: 'ADMIN' } })
-  ]);
+  let articles: Prisma.ArticleGetPayload<{ include: { category: true } }>[] = [];
+  let categories: Awaited<ReturnType<typeof prisma.category.findMany>> = [];
+  let admins: Awaited<ReturnType<typeof prisma.user.findMany>> = [];
+
+  try {
+    [articles, categories, admins] = await Promise.all([
+      prisma.article.findMany({ include: { category: true }, orderBy: { createdAt: 'desc' } }),
+      prisma.category.findMany(),
+      prisma.user.findMany({ where: { role: 'ADMIN' } })
+    ]);
+  } catch {
+    // Render empty states if schema is not present yet.
+  }
 
   return (
     <div className="space-y-6">

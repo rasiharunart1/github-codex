@@ -1,18 +1,34 @@
 import { prisma } from '@/lib/prisma';
 
+export const dynamic = 'force-dynamic';
+
 export default async function AdminDashboardPage() {
-  const [articles, categories, tags, views] = await Promise.all([
-    prisma.article.count(),
-    prisma.category.count(),
-    prisma.tag.count(),
-    prisma.article.aggregate({ _sum: { views: true } })
-  ]);
+  let articles = 0;
+  let categories = 0;
+  let tags = 0;
+  let viewsTotal = 0;
+
+  try {
+    const [articlesCount, categoriesCount, tagsCount, views] = await Promise.all([
+      prisma.article.count(),
+      prisma.category.count(),
+      prisma.tag.count(),
+      prisma.article.aggregate({ _sum: { views: true } })
+    ]);
+
+    articles = articlesCount;
+    categories = categoriesCount;
+    tags = tagsCount;
+    viewsTotal = views._sum.views ?? 0;
+  } catch {
+    // Keep zero-state dashboard when DB schema is unavailable.
+  }
 
   const cards = [
     { label: 'Articles', value: articles },
     { label: 'Categories', value: categories },
     { label: 'Tags', value: tags },
-    { label: 'Views', value: views._sum.views ?? 0 }
+    { label: 'Views', value: viewsTotal }
   ];
 
   return (
