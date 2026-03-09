@@ -1,12 +1,21 @@
 import { prisma } from '@/lib/prisma';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
-  const articles = await prisma.article.findMany({
-    where: { published: true },
-    select: { title: true, slug: true, excerpt: true, createdAt: true },
-    orderBy: { createdAt: 'desc' },
-    take: 20
-  });
+  let articles: Array<{ title: string; slug: string; excerpt: string; createdAt: Date }> = [];
+
+  try {
+    articles = await prisma.article.findMany({
+      where: { published: true },
+      select: { title: true, slug: true, excerpt: true, createdAt: true },
+      orderBy: { createdAt: 'desc' },
+      take: 20
+    });
+  } catch {
+    // Fallback for environments where DB tables are not migrated yet.
+    articles = [];
+  }
 
   const items = articles
     .map(

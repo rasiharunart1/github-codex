@@ -1,8 +1,16 @@
 import { createCategoryAction } from '@/lib/actions';
 import { prisma } from '@/lib/prisma';
 
+export const dynamic = 'force-dynamic';
+
 export default async function AdminCategoriesPage() {
-  const categories = await prisma.category.findMany({ orderBy: { createdAt: 'desc' } });
+  let categories: Awaited<ReturnType<typeof prisma.category.findMany>> = [];
+
+  try {
+    categories = await prisma.category.findMany({ orderBy: { createdAt: 'desc' } });
+  } catch {
+    // Render empty state if schema is not present yet.
+  }
 
   return (
     <div className="space-y-6">

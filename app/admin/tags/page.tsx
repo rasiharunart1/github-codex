@@ -1,8 +1,16 @@
 import { createTagAction } from '@/lib/actions';
 import { prisma } from '@/lib/prisma';
 
+export const dynamic = 'force-dynamic';
+
 export default async function AdminTagsPage() {
-  const tags = await prisma.tag.findMany({ orderBy: { createdAt: 'desc' } });
+  let tags: Awaited<ReturnType<typeof prisma.tag.findMany>> = [];
+
+  try {
+    tags = await prisma.tag.findMany({ orderBy: { createdAt: 'desc' } });
+  } catch {
+    // Render empty state if schema is not present yet.
+  }
 
   return (
     <div className="space-y-6">
